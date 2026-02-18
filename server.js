@@ -1,84 +1,92 @@
 const express = require("express");
-const { EventEmitter } = require("events");
+const { readFileSync } = require("fs");
+const { join } = require("path");
+const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
+const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
+
+const WEB_DIST = join(__dirname, "dist");
+const JS_INPUT = readFileSync(join(WEB_DIST, "input-text.js"), "utf8");
+
+const mcpServer = new McpServer({
+  name: "sum-server",
+  version: "1.0.0",
+});
+
+mcpServer.registerResource(
+  "calculator-widget",
+  "ui://widget/calculator.html",
+  {
+    title: "Calculadora",
+    description: "Formulario interactivo para sumar números",
+  },
+  async () => ({
+    contents: [
+      {
+        uri: "ui://widget/calculator.html",
+        mimeType: "text/html+skybridge",
+        text: `
+          <div id="root"></div>
+          <script type="module">
+            ${JS_INPUT}
+          </script>
+        `,
+      },
+    ],
+  })
+);
+
+mcpServer.registerTool(
+  "abrir-calculadora",
+  {
+    title: "Abrir calculadora",
+    description: "Abre una calculadora interactiva",
+    _meta: {
+      "openai/outputTemplate": "ui://widget/calculator.html",
+    },
+  },
+  async () => ({
+    structuredContent: {},
+  })
+);
+
+mcpServer.registerTool(
+  "suma",
+  {
+    title: "Sumar números",
+    description: "Suma dos números",
+  },
+  async ({ a, b }) => {
+    if (typeof a !== "number" || typeof b !== "number") {
+      throw new Error("a y b deben ser números");
+    }
+
+    return {
+      structuredContent: {
+        resultado: a + b,
+      },
+    };
+  }
+);
 
 const app = express();
 app.use(express.json());
 
-const broadcaster = new EventEmitter();
-broadcaster.setMaxListeners(0);
+const transport = new StreamableHTTPServerTransport({
+  sessionIdGenerator: undefined,
+  enableJsonResponse: true,
+});
 
-let masterConnected = false;
+mcpServer.connect(transport);
 
 app.all("/mcp", async (req, res) => {
-  const wantsSse =
-    req.method === "GET" &&
-    (req.headers.accept?.includes("text/event-stream") ||
-      req.headers["user-agent"]?.includes("curl"));
-
-  if (wantsSse) {
-    if (masterConnected) {
-      res.status(409).json({ error: "SSE already connected." });
-      return;
-    }
-
-    masterConnected = true;
-
-    res.writeHead(200, {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    });
-
-    res.flushHeaders?.();
-
-    const transport = new StreamableHTTPServerTransport({
-      enableJsonResponse: true,
-    });
-
-    await mcpServer.connect(transport);
-
-    const origWrite = res.write.bind(res);
-
-    res.write = (chunk) => {
-      try {
-        broadcaster.emit("model-chunk", chunk);
-      } catch {}
-      return origWrite(chunk);
-    };
-
-    req.on("close", () => {
-      masterConnected = false;
-      broadcaster.emit("transport-closed");
-      try { res.end(); } catch {}
-    });
-
-    try {
-      await transport.handleRequest(req, res, req.body);
-    } catch (err) {
-      console.error("SSE error:", err);
-      broadcaster.emit("transport-error", err);
-      try { res.end(); } catch {}
-    }
-
-    return;
-  }
-
-  // POST / DELETE requests
   try {
-    const transport = new StreamableHTTPServerTransport({
-      enableJsonResponse: true,
-    });
-
-    await mcpServer.connect(transport);
     await transport.handleRequest(req, res, req.body);
-
   } catch (err) {
     console.error("MCP error:", err);
     res.status(500).end(String(err));
   }
 });
 
-// Root para verificar que el server vive
 app.get("/", (req, res) => {
   res.json({ status: "MCP server running" });
 });
