@@ -8,13 +8,11 @@ const WEB_DIST = join(__dirname, "dist");
 
 const JS_INPUT = readFileSync(join(WEB_DIST, "input-text.js"), "utf8");
 const JS_CREDIT = readFileSync(join(WEB_DIST, "credit-card.js"), "utf8");
-const CSS = readFileSync(join(WEB_DIST, "styles.css"), "utf8");
 
 const mcpServer = new McpServer({
   name: "sum-server",
   version: "1.0.0",
 });
-
 
 mcpServer.registerResource(
   "calculator-widget",
@@ -29,7 +27,6 @@ mcpServer.registerResource(
         uri: "ui://widget/calculator.html",
         mimeType: "text/html+skybridge",
         text: `
-          <style>${CSS}</style>
           <div id="root"></div>
           <script type="module">
             ${JS_INPUT}
@@ -53,7 +50,6 @@ mcpServer.registerResource(
         uri: "ui://widget/credit-card.html",
         mimeType: "text/html+skybridge",
         text: `
-          <style>${CSS}</style>
           <div id="root"></div>
           <script type="module">
             ${JS_CREDIT}

@@ -1,1 +1,0 @@
-import{R as e,j as t,a as r}from"./client-a7_s3GWX.js";import{C as o}from"./card-dashboard-Yclk48Ap.js";e.createRoot(document.getElementById("root")).render(t.jsx(r.StrictMode,{children:t.jsx(o,{})}));
