@@ -64,35 +64,31 @@ mcpServer.registerTool(
   "abrir-calculadora",
   {
     title: "Abrir calculadora",
-    description: "Abre una calculadora interactiva para sumar números",
+    description: "Abre una calculadora interactiva",
     _meta: {
       "openai/outputTemplate": "ui://widget/calculator.html",
     },
   },
-  async () => ({
-    structuredContent: {},
-  })
+  async () => ({ structuredContent: {} })
 );
 
 mcpServer.registerTool(
   "mostrar-tarjetas",
   {
     title: "Mostrar tarjetas",
-    description: "Muestra las tarjetas de crédito disponibles",
+    description: "Muestra tarjetas disponibles",
     _meta: {
       "openai/outputTemplate": "ui://widget/credit-card.html",
     },
   },
-  async () => ({
-    structuredContent: {},
-  })
+  async () => ({ structuredContent: {} })
 );
 
 mcpServer.registerTool(
   "suma",
   {
     title: "Sumar números",
-    description: "Suma dos números y devuelve el resultado",
+    description: "Suma dos números",
   },
   async ({ a, b }) => {
     if (typeof a !== "number" || typeof b !== "number") {
@@ -110,13 +106,24 @@ mcpServer.registerTool(
 const app = express();
 app.use(express.json());
 
-app.post("/mcp", async (req, res) => {
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-  });
+const transport = new StreamableHTTPServerTransport({
+  sessionIdGenerator: undefined,
+  enableJsonResponse: true,
+});
 
-  await mcpServer.connect(transport);
-  await transport.handleRequest(req, res);
+mcpServer.connect(transport);
+
+app.all("/mcp", async (req, res) => {
+  try {
+    await transport.handleRequest(req, res, req.body);
+  } catch (err) {
+    console.error("MCP error:", err);
+    res.status(500).end(String(err));
+  }
+});
+
+app.get("/", (req, res) => {
+  res.json({ status: "MCP server running" });
 });
 
 const PORT = process.env.PORT || 3000;
