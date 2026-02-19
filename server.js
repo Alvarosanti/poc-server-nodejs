@@ -117,7 +117,10 @@ app.all("/mcp", async (req, res) => {
       async () => ({
         content: [
           { type: "text", text: "Te abro la calculadora." }
-        ]
+        ],
+        structuredContent: {
+          view: "input"
+        }
       })
     );
     const transport = new StreamableHTTPServerTransport({
