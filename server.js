@@ -5,10 +5,6 @@ import { StreamableHTTPServerTransport }
 
 const app = express();
 
-/* 🔥 IMPORTANTE
-   Usamos raw body para que el SDK reciba el body intacto.
-   NO usar express.json()
-*/
 app.use("/mcp", express.text({ type: "*/*" }));
 
 const mcpServer = new McpServer({
@@ -39,10 +35,6 @@ mcpServer.registerTool(
   })
 );
 
-const transport = new StreamableHTTPServerTransport();
-
-await mcpServer.connect(transport);
-
 app.all("/mcp", async (req, res) => {
   try {
     const transport = new StreamableHTTPServerTransport();
@@ -53,25 +45,13 @@ app.all("/mcp", async (req, res) => {
   } catch (err) {
     console.error("🔥 MCP ERROR:", err);
     if (!res.headersSent) {
-      res.status(500).end();
+      res.status(500).end(String(err));
     }
   }
 });
 
-/* Root simple para health check */
 app.get("/", (_, res) => {
   res.json({ status: "MCP server running" });
-});
-
-/* 🔥 Captura global de errores */
-process.on("uncaughtException", (err) => {
-  console.error("🔥 UNCAUGHT EXCEPTION:");
-  console.error(err);
-});
-
-process.on("unhandledRejection", (reason) => {
-  console.error("🔥 UNHANDLED REJECTION:");
-  console.error(reason);
 });
 
 const PORT = process.env.PORT || 3000;
