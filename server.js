@@ -1,5 +1,5 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
+import { HttpClientTransport } from "@modelcontextprotocol/sdk/client/http.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 
 const server = new Server(
@@ -53,7 +53,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 })
 
 async function main() {
-  const transport = new StdioClientTransport()
+  const transport = new HttpClientTransport()
   await server.connect(transport)
   console.log('demo started')
 }
