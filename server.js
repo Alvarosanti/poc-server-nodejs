@@ -76,13 +76,10 @@ Esta herramienta es terminal.
         _meta: {
           "openai/outputTemplate": "ui://widget/suma.html",
           "openai/toolInvocation/invoking": "Abriendo calculadora...",
-          "openai/toolInvocation/invoked": "Calculadora lista",
-          "openai/toolInvocation/isTerminal": true
         },
         inputSchema: { type: "object", properties: {} }
       },
       async () => ({
-        content: [],
         structuredContent: { view: "input" }
       })
     );
@@ -112,7 +109,6 @@ Esta herramienta es terminal.
         _meta: {
           "openai/outputTemplate": "ui://widget/suma.html",
           "openai/toolInvocation/invoking": "Abriendo dashboard...",
-          "openai/toolInvocation/invoked": "Dashboard listo"
         },
         inputSchema: {
           type: "object",
@@ -120,7 +116,6 @@ Esta herramienta es terminal.
         }
       },
       async () => ({
-        content: [], // 🔥 CLAVE
         structuredContent: { view: "dashboard" }
       })
     );
