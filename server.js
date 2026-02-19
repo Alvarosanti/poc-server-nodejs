@@ -9,7 +9,7 @@ const app = express();
    Usamos raw body para que el SDK reciba el body intacto.
    NO usar express.json()
 */
-app.use("/mcp", express.raw({ type: "*/*" }));
+app.use("/mcp", express.text({ type: "*/*" }));
 
 const mcpServer = new McpServer({
   name: "mcp-demo-minimal",
@@ -43,25 +43,13 @@ const transport = new StreamableHTTPServerTransport();
 
 await mcpServer.connect(transport);
 
-app.use("/mcp", async (req, res) => {
+app.all("/mcp", async (req, res) => {
   try {
-    console.log("➡️ MCP REQUEST:", req.method);
-    console.log("Headers:", req.headers);
-
-    await transport.handleRequest(req, res, req.body);
-
-    console.log("✅ MCP handled correctly");
+    await transport.handleRequest(req, res);
   } catch (err) {
-    console.error("🔥 MCP INTERNAL ERROR:");
-    console.error(err);
-    console.error(err?.stack);
-
+    console.error("🔥 MCP INTERNAL ERROR:", err);
     if (!res.headersSent) {
-      res.status(500).json({
-        error: "MCP crashed",
-        message: err?.message,
-        stack: err?.stack,
-      });
+      res.status(500).end();
     }
   }
 });
