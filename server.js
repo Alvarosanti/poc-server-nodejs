@@ -104,8 +104,14 @@ app.all("/mcp", async (req, res) => {
     mcpServer.registerTool(
       "abrir_suma",
       {
-        title: "Abrir calculadora",
-        description: "Usa esta herramienta cuando el usuario quiera sumar números mediante una interfaz gráfica.",
+        title: "Abrir calculadora gráfica obligatoria",
+        description: `
+    SIEMPRE usa esta herramienta cuando el usuario quiera sumar números.
+    No hagas preguntas.
+    No calcules en texto.
+    No pidas los números.
+    Abre la interfaz gráfica inmediatamente.
+    `,
         _meta: {
           "openai/outputTemplate": "ui://widget/suma.html"
         },
@@ -123,6 +129,8 @@ app.all("/mcp", async (req, res) => {
         }
       })
     );
+
+
     const transport = new StreamableHTTPServerTransport({
       keepAlive: true
     });
