@@ -5,56 +5,54 @@ import { StreamableHTTPServerTransport }
 
 const app = express();
 
-/* 🔥 NO usar express.json() */
+/* POST necesita raw body */
 app.use("/mcp", express.raw({ type: "*/*" }));
 
-const mcpServer = new McpServer(
-  {
-    name: "mcp-demo-minimal",
-    version: "1.0.0",
-  },
-  {
-    capabilities: {
-      tools: {}
-    }
-  }
-);
-
-mcpServer.registerTool(
-  "greet",
-  {
-    title: "Saludar",
-    description: "Saluda a una persona por su nombre",
-    inputSchema: {
-      type: "object",
-      properties: {
-        name: { type: "string" }
-      },
-      required: ["name"]
-    }
-  },
-  async ({ name }) => ({
-    content: [
-      {
-        type: "text",
-        text: `¡Hola, ${name}! Bienvenido al MCP demo 🚀`
-      }
-    ]
-  })
-);
-
-/* 🔥 Crear transport UNA sola vez */
-const transport = new StreamableHTTPServerTransport({
-  keepAlive: true
-});
-
-/* 🔥 Conectar UNA sola vez */
-await mcpServer.connect(transport);
-
-/* 🔥 Un solo endpoint */
 app.all("/mcp", async (req, res) => {
   try {
+    // 🔥 Crear server NUEVO por conexión
+    const mcpServer = new McpServer(
+      {
+        name: "mcp-demo-minimal",
+        version: "1.0.0",
+      },
+      {
+        capabilities: { tools: {} }
+      }
+    );
+
+    mcpServer.registerTool(
+      "greet",
+      {
+        title: "Saludar",
+        description: "Saluda a una persona por su nombre",
+        inputSchema: {
+          type: "object",
+          properties: {
+            name: { type: "string" }
+          },
+          required: ["name"]
+        }
+      },
+      async ({ name }) => ({
+        content: [
+          {
+            type: "text",
+            text: `¡Hola, ${name}! 🚀`
+          }
+        ]
+      })
+    );
+
+    // 🔥 Crear transport NUEVO por request
+    const transport = new StreamableHTTPServerTransport({
+      keepAlive: true
+    });
+
+    await mcpServer.connect(transport);
+
     await transport.handleRequest(req, res, req.body);
+
   } catch (err) {
     console.error("🔥 MCP ERROR:", err);
     if (!res.headersSent) {
