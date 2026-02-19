@@ -40,15 +40,15 @@ mcpServer.registerTool(
   })
 );
 
+/* 🔥 Creamos transport pero NO conectamos aún */
 const transport = new StreamableHTTPServerTransport({
   keepAlive: true
 });
 
-await mcpServer.connect(transport);
-
-/* 🔥 GET (SSE) */
+/* 🔥 GET abre SSE y conecta */
 app.get("/mcp", async (req, res) => {
   try {
+    await mcpServer.connect(transport);
     await transport.handleRequest(req, res);
   } catch (err) {
     console.error("🔥 GET ERROR:", err);
@@ -58,7 +58,7 @@ app.get("/mcp", async (req, res) => {
   }
 });
 
-/* 🔥 POST (JSON-RPC) */
+/* 🔥 POST usa la misma conexión ya abierta */
 app.post("/mcp", express.raw({ type: "*/*" }), async (req, res) => {
   try {
     await transport.handleRequest(req, res, req.body);
