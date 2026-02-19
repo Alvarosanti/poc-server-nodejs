@@ -5,8 +5,6 @@ import { StreamableHTTPServerTransport }
 
 const app = express();
 
-app.use("/mcp", express.text({ type: "*/*" }));
-
 const mcpServer = new McpServer({
   name: "mcp-demo-minimal",
   version: "1.0.0",
@@ -40,6 +38,9 @@ const transport = new StreamableHTTPServerTransport({
 });
 
 await mcpServer.connect(transport);
+
+/* 🔥 SOLO POST tiene body parser */
+app.post("/mcp", express.text({ type: "*/*" }));
 
 app.all("/mcp", async (req, res) => {
   try {
