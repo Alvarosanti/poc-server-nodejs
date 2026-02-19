@@ -7,42 +7,43 @@ const app = express();
 
 app.use("/mcp", express.text({ type: "*/*" }));
 
+const mcpServer = new McpServer({
+  name: "mcp-demo-minimal",
+  version: "1.0.0",
+});
+
+mcpServer.registerTool(
+  "greet",
+  {
+    title: "Saludar",
+    description: "Saluda a una persona por su nombre",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string" }
+      },
+      required: ["name"]
+    }
+  },
+  async ({ name }) => ({
+    content: [
+      {
+        type: "text",
+        text: `¡Hola, ${name}! Bienvenido al MCP demo 🚀`
+      }
+    ]
+  })
+);
+
+const transport = new StreamableHTTPServerTransport({
+  keepAlive: true
+});
+
+await mcpServer.connect(transport);
+
 app.all("/mcp", async (req, res) => {
   try {
-    const mcpServer = new McpServer({
-      name: "mcp-demo-minimal",
-      version: "1.0.0",
-    });
-
-    mcpServer.registerTool(
-      "greet",
-      {
-        title: "Saludar",
-        description: "Saluda a una persona por su nombre",
-        inputSchema: {
-          type: "object",
-          properties: {
-            name: { type: "string" }
-          },
-          required: ["name"]
-        }
-      },
-      async ({ name }) => ({
-        content: [
-          {
-            type: "text",
-            text: `¡Hola, ${name}! Bienvenido al MCP demo 🚀`
-          }
-        ]
-      })
-    );
-
-    const transport = new StreamableHTTPServerTransport();
-
-    await mcpServer.connect(transport);
-
     await transport.handleRequest(req, res);
-
   } catch (err) {
     console.error("🔥 MCP ERROR:", err);
     if (!res.headersSent) {
