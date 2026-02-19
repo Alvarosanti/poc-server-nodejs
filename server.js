@@ -46,14 +46,24 @@ const transport = new StreamableHTTPServerTransport({
 
 await mcpServer.connect(transport);
 
-/* 🔥 SOLO POST tiene body parser */
-app.post("/mcp", express.text({ type: "*/*" }));
-
-app.all("/mcp", async (req, res) => {
+/* 🔥 GET (SSE) */
+app.get("/mcp", async (req, res) => {
   try {
     await transport.handleRequest(req, res);
   } catch (err) {
-    console.error("🔥 MCP ERROR:", err);
+    console.error("🔥 GET ERROR:", err);
+    if (!res.headersSent) {
+      res.status(500).end(String(err));
+    }
+  }
+});
+
+/* 🔥 POST (JSON-RPC) */
+app.post("/mcp", express.raw({ type: "*/*" }), async (req, res) => {
+  try {
+    await transport.handleRequest(req, res, req.body);
+  } catch (err) {
+    console.error("🔥 POST ERROR:", err);
     if (!res.headersSent) {
       res.status(500).end(String(err));
     }
