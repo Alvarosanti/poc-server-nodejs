@@ -45,9 +45,13 @@ await mcpServer.connect(transport);
 
 app.all("/mcp", async (req, res) => {
   try {
+    const transport = new StreamableHTTPServerTransport();
+
+    await mcpServer.connect(transport);
+
     await transport.handleRequest(req, res);
   } catch (err) {
-    console.error("🔥 MCP INTERNAL ERROR:", err);
+    console.error("🔥 MCP ERROR:", err);
     if (!res.headersSent) {
       res.status(500).end();
     }
