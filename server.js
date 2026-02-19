@@ -6,25 +6,13 @@ import path from "path";
 
 const app = express();
 
-
-
+app.use("/static", express.static("dist"))
 
 app.all("/mcp", async (req, res) => {
   try {
     const mcpServer = new McpServer(
-      {
-        name: "mcp-demo-minimal",
-        version: "1.0.0",
-      },
-      {
-        capabilities: { tools: {} }
-      }
-
-    );
-
-    const widgetJs = fs.readFileSync(
-      path.resolve("./dist/component.js"),
-      "utf8"
+      { name: "mcp-demo-minimal", version: "1.0.0", },
+      { capabilities: { tools: {} } }
     );
 
     mcpServer.registerResource(
@@ -38,11 +26,9 @@ app.all("/mcp", async (req, res) => {
           uri: "ui://widget/suma.html",
           mimeType: "text/html+skybridge",
           text: `
-            <div id="root"></div>
-            <script type="module">
-              ${widgetJs}
-            </script>
-          `
+  <div id="root"></div>
+  <script type="module" src="/static/component.js"></script>
+`
         }]
       })
     );
