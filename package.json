@@ -17,11 +17,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.24.1",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "cors": "^2.8.6",
     "express": "^5.2.1"
-  },
-  "overrides": {
-    "zod": "3.21.4"
   }
 }

@@ -55,24 +55,15 @@ app.all("/mcp", async (req, res) => {
         inputSchema: {
           type: "object",
           properties: {
-            a: {
-              type: "number",
-              description: "Primer número a sumar"
-            },
-            b: {
-              type: "number",
-              description: "Segundo número a sumar"
-            }
+            a: { type: "number" },
+            b: { type: "number" }
           },
           required: ["a", "b"]
         }
       },
       async ({ a, b }) => ({
         content: [
-          {
-            type: "text",
-            text: `El resultado de ${a} + ${b} es ${a + b}`
-          }
+          { type: "text", text: `Resultado: ${a + b}` }
         ]
       })
     );
