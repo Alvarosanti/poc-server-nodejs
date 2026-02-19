@@ -82,9 +82,49 @@ Esta herramienta es terminal.
         inputSchema: { type: "object", properties: {} }
       },
       async () => ({
+        content: [],
         structuredContent: { view: "input" }
       })
     );
+
+
+    mcpServer.registerTool(
+      "abrir_dashboard",
+      {
+        title: "Abrir panel de tarjetas",
+        description: `
+    SIEMPRE usa esta herramienta cuando el usuario quiera:
+    
+    - Ver tarjetas
+    - Ver dashboard
+    - Ver listado de tarjetas
+    - Comparar tarjetas
+    - Consultar información de tarjetas
+    - Mostrar panel de tarjetas
+    
+    NO generes texto.
+    NO expliques nada.
+    NO respondas después.
+    NO hagas preguntas.
+    
+    Esta herramienta abre directamente la interfaz gráfica del dashboard.
+        `,
+        _meta: {
+          "openai/outputTemplate": "ui://widget/suma.html",
+          "openai/toolInvocation/invoking": "Abriendo dashboard...",
+          "openai/toolInvocation/invoked": "Dashboard listo"
+        },
+        inputSchema: {
+          type: "object",
+          properties: {}
+        }
+      },
+      async () => ({
+        content: [], // 🔥 CLAVE
+        structuredContent: { view: "dashboard" }
+      })
+    );
+
 
     // 🔥 Transport por request
     const transport = new StreamableHTTPServerTransport({
