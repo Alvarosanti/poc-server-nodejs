@@ -44,12 +44,18 @@ app.all("/mcp", async (req, res) => {
       "sumar",
       {
         title: "Sumar números",
-        description: "Suma dos números y devuelve el resultado",
+        description: "Herramienta obligatoria para realizar sumas matemáticas exactas entre dos números. Debe usarse siempre que el usuario pida una suma.",
         inputSchema: {
           type: "object",
           properties: {
-            a: { type: "number" },
-            b: { type: "number" }
+            a: { 
+              type: "number", 
+              description: "Primer número a sumar"
+            },
+            b: { 
+              type: "number", 
+              description: "Segundo número a sumar"
+            }
           },
           required: ["a", "b"]
         }
