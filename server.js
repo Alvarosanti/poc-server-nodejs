@@ -1,88 +1,63 @@
-const express = require("express");
-const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
-const { StreamableHTTPServerTransport } = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
+import { Server } from "@modelcontextprotocol/sdk/server/index.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
+import { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 
+const server = new Server(
 
-const mcpServer = new McpServer({
-  name: "math-server",
-  version: "1.0.0",
-});
-
-mcpServer.registerTool(
-  "suma",
   {
-    title: "Sumar números",
-    description: "Suma dos números y devuelve el resultado",
+    name: "mcp-demo-minimal",
+    version: "1.0.0",
   },
-  async ({ a, b }) => {
-    if (typeof a !== "number" || typeof b !== "number") {
-      throw new Error("a y b deben ser números");
+  {
+    capabilities: {
+      tools: {}
     }
+  }
+)
 
+server.setRequestHandler(ListToolsRequestSchema, async (request) => {
+  return {
+    tools: [
+      {
+        name: "greet",
+        description: "Saludar a la persona por su nombre",
+        inputSchema: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: "El nombre de la persona a saludar"
+            }
+          },
+          required: ["name"]
+        }
+      }
+    ]
+  }
+})
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, "argument": args } = request.params;
+  if (name === "greet") {
+    const { name: personName } = args
     return {
       content: [
         {
           type: "text",
-          text: `El resultado de ${a} + ${b} es ${a + b}`,
-        },
-      ],
-      structuredContent: {
-        resultado: a + b,
-      },
-    };
-  }
-);
-
-mcpServer.registerTool(
-  "resta",
-  {
-    title: "Restar números",
-    description: "Resta dos números y devuelve el resultado",
-  },
-  async ({ a, b }) => {
-    if (typeof a !== "number" || typeof b !== "number") {
-      throw new Error("a y b deben ser números");
+          text: `¡Hola, ${name}! bienvenidu a mcp demo`
+        }
+      ]
     }
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: `El resultado de ${a} - ${b} es ${a - b}`,
-        },
-      ],
-      structuredContent: {
-        resultado: a - b,
-      },
-    };
   }
-);
+  throw new Error(`Tool ${toolName} no encontrada`)
+})
 
-const app = express();
-app.use(express.json());
-
-const transport = new StreamableHTTPServerTransport({
-  sessionIdGenerator: undefined,
-  enableJsonResponse: true,
-});
-
-mcpServer.connect(transport);
-
-app.all("/mcp", async (req, res) => {
-  try {
-    await transport.handleRequest(req, res, req.body);
-  } catch (err) {
-    console.error("MCP error:", err);
-    res.status(500).end(String(err));
-  }
-});
-
-app.get("/", (req, res) => {
-  res.json({ status: "Math MCP server running" });
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 MCP Server corriendo en http://localhost:${PORT}/mcp`);
-});
+async function main() {
+  const transport = new StdioClientTransport()
+  await server.connect(transport)
+  console.log('demo started')
+}
+main().catch((error) => {
+  console.error("Error en el servidor:", error)
+  process.exit(1)
+})
