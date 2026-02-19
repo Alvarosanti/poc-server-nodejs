@@ -113,7 +113,9 @@ app.all("/mcp", async (req, res) => {
     Abre la interfaz gráfica inmediatamente.
     `,
         _meta: {
-          "openai/outputTemplate": "ui://widget/suma.html"
+          "openai/outputTemplate": "ui://widget/suma.html",
+          "openai/toolInvocation/invoking": "Abriendo calculadora...",
+          "openai/toolInvocation/invoked": "Calculadora lista"
         },
         inputSchema: {
           type: "object",
