@@ -40,6 +40,30 @@ app.all("/mcp", async (req, res) => {
       })
     );
 
+    mcpServer.registerTool(
+      "sumar",
+      {
+        title: "Sumar números",
+        description: "Suma dos números y devuelve el resultado",
+        inputSchema: {
+          type: "object",
+          properties: {
+            a: { type: "number" },
+            b: { type: "number" }
+          },
+          required: ["a", "b"]
+        }
+      },
+      async ({ a, b }) => ({
+        content: [
+          {
+            type: "text",
+            text: `El resultado de ${a} + ${b} es ${a + b}`
+          }
+        ]
+      })
+    );
+
     const transport = new StreamableHTTPServerTransport({
       keepAlive: true
     });
