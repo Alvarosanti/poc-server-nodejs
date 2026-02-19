@@ -38,9 +38,7 @@ mcpServer.registerTool(
   }
 );
 
-const transport = new StreamableHTTPServerTransport({
-  enableJsonResponse: true,
-});
+const transport = new StreamableHTTPServerTransport();
 
 await mcpServer.connect(transport);
 
