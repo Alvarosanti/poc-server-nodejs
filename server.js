@@ -80,6 +80,12 @@ Esta herramienta es terminal.
         inputSchema: { type: "object", properties: {} }
       },
       async () => ({
+        content: [
+          {
+            type: "text",
+            text: ""
+          }
+        ],
         structuredContent: { view: "input" }
       })
     );
@@ -116,6 +122,12 @@ Esta herramienta es terminal.
         }
       },
       async () => ({
+        content: [
+          {
+            type: "text",
+            text: ""
+          }
+        ],
         structuredContent: { view: "dashboard" }
       })
     );
