@@ -26,9 +26,10 @@ app.all("/mcp", async (req, res) => {
           uri: "ui://widget/suma.html",
           mimeType: "text/html+skybridge",
           text: `
-  <div id="root"></div>
-  <script type="module" src="/static/component.js"></script>
-`
+          <div style="padding:20px">
+            <h2>TEST UI</h2>
+          </div>
+        `
         }]
       })
     );
