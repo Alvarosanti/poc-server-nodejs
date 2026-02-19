@@ -5,10 +5,17 @@ import { StreamableHTTPServerTransport }
 
 const app = express();
 
-const mcpServer = new McpServer({
-  name: "mcp-demo-minimal",
-  version: "1.0.0",
-});
+const mcpServer = new McpServer(
+  {
+    name: "mcp-demo-minimal",
+    version: "1.0.0",
+  },
+  {
+    capabilities: {
+      tools: {}
+    }
+  }
+);
 
 mcpServer.registerTool(
   "greet",
