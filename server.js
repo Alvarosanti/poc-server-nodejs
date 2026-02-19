@@ -39,16 +39,23 @@ const transport = new StreamableHTTPServerTransport();
 
 await mcpServer.connect(transport);
 
-app.use("/mcp", (req, res) => {
+app.use("/mcp", async (req, res) => {
   try {
-    transport.handleRequest(req, res, req.body);
+    await transport.handleRequest(req, res, req.body);
   } catch (err) {
-    console.error("MCP error:", err);
+    console.error("🔥 MCP INTERNAL ERROR:");
+    console.error(err);
+    console.error(err.stack);
+
     if (!res.headersSent) {
-      res.status(500).end(String(err));
+      res.status(500).json({
+        error: "MCP crashed",
+        message: err?.message,
+      });
     }
   }
 });
+
 
 app.get("/", (_, res) => {
   res.json({ status: "MCP server running" });
