@@ -6,131 +6,100 @@ import path from "path";
 
 const app = express();
 
+// 🔥 1️⃣ Crear MCP UNA sola vez
+const mcpServer = new McpServer(
+  { name: "mcp-demo-minimal", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+// 🔥 2️⃣ Crear transport UNA sola vez
+const transport = new StreamableHTTPServerTransport({
+  keepAlive: true
+});
+
+// 🔥 3️⃣ Registrar resources UNA sola vez
+
+const widgetJs = fs.readFileSync(
+  path.resolve("./dist/component.js"),
+  "utf8"
+);
+
+mcpServer.registerResource(
+  "sum-widget",
+  "ui://widget/suma.html",
+  { title: "Calculadora" },
+  async () => ({
+    contents: [{
+      uri: "ui://widget/suma.html",
+      mimeType: "text/html+skybridge",
+      text: `
+        <div id="root"></div>
+        <script type="module">
+          ${widgetJs}
+        </script>
+      `
+    }]
+  })
+);
+
+// 🔥 4️⃣ Registrar tools UNA sola vez
+
+mcpServer.registerTool(
+  "sumar",
+  {
+    title: "Sumar números",
+    description: "Herramienta obligatoria para sumar números.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        a: { type: "number" },
+        b: { type: "number" }
+      },
+      required: ["a", "b"]
+    }
+  },
+  async ({ a, b }) => ({
+    content: [{ type: "text", text: `Resultado: ${a + b}` }],
+    structuredContent: { resultado: a + b }
+  })
+);
+
+mcpServer.registerTool(
+  "abrir_suma",
+  {
+    title: "Abrir calculadora gráfica obligatoria",
+    description: `
+SIEMPRE usa esta herramienta cuando el usuario quiera sumar números.
+No hagas preguntas.
+No calcules en texto.
+No pidas los números.
+Abre la interfaz gráfica inmediatamente.
+    `,
+    _meta: {
+      "openai/outputTemplate": "ui://widget/suma.html",
+      "openai/toolInvocation/invoking": "Abriendo calculadora...",
+      "openai/toolInvocation/invoked": "Calculadora lista"
+    },
+    inputSchema: {
+      type: "object",
+      properties: {}
+    }
+  },
+  async () => ({
+    structuredContent: { view: "input" }
+  })
+);
+
+// 🔥 5️⃣ Conectar solo una vez (lazy connect)
+let isConnected = false;
+
 app.all("/mcp", async (req, res) => {
   try {
-    const mcpServer = new McpServer(
-      { name: "mcp-demo-minimal", version: "1.0.0", },
-      { capabilities: { tools: {} } }
-    );
+    if (!isConnected) {
+      await mcpServer.connect(transport);
+      isConnected = true;
+    }
 
-    const widgetJs = fs.readFileSync(
-      path.resolve("./dist/component.js"),
-      "utf8"
-    );
-
-    mcpServer.registerResource(
-      "sum-widget",
-      "ui://widget/suma.html",
-      {
-        title: "Calculadora"
-      },
-      async () => ({
-        contents: [{
-          uri: "ui://widget/suma.html",
-          mimeType: "text/html+skybridge",
-          text: `
-            <div id="root"></div>
-            <script type="module">
-              ${widgetJs}
-            </script>
-          `
-        }]
-      })
-    );
-
-    mcpServer.registerTool(
-      "greet",
-      {
-        title: "Saludar",
-        description: "Usa esta herramienta únicamente cuando el usuario quiera saludar o enviar un saludo a alguien.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            name: { type: "string" }
-          },
-          required: ["name"]
-        }
-      },
-      async ({ name }) => {
-        if (!name) {
-          return {
-            content: [
-              { type: "text", text: "Nombre no proporcionado." }
-            ]
-          };
-        }
-
-        return {
-          content: [
-            { type: "text", text: `¡Hola, ${name}! 🚀` }
-          ]
-        };
-      }
-    );
-
-    mcpServer.registerTool(
-      "sumar",
-      {
-        title: "Sumar números",
-        description: "Herramienta obligatoria para realizar operaciones matemáticas de suma entre dos números.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            a: { type: "number" },
-            b: { type: "number" }
-          },
-          required: ["a", "b"]
-        }
-      },
-      async ({ a, b }) => ({
-        content: [
-          { type: "text", text: `Resultado: ${a + b}` }
-        ],
-        structuredContent: {
-          resultado: a + b
-        }
-      })
-    );
-
-    mcpServer.registerTool(
-      "abrir_suma",
-      {
-        title: "Abrir calculadora gráfica obligatoria",
-        description: `
-    SIEMPRE usa esta herramienta cuando el usuario quiera sumar números.
-    No hagas preguntas.
-    No calcules en texto.
-    No pidas los números.
-    Abre la interfaz gráfica inmediatamente.
-    `,
-        _meta: {
-          "openai/outputTemplate": "ui://widget/suma.html",
-          "openai/toolInvocation/invoking": "Abriendo calculadora...",
-          "openai/toolInvocation/invoked": "Calculadora lista"
-        },
-        inputSchema: {
-          type: "object",
-          properties: {}
-        }
-      },
-      async () => ({
-        content: [
-          { type: "text", text: "Te abro la calculadora." }
-        ],
-        structuredContent: {
-          view: "input"
-        }
-      })
-    );
-
-
-    const transport = new StreamableHTTPServerTransport({
-      keepAlive: true
-    });
-
-    await mcpServer.connect(transport);
-
-    // 🔥 NO pasar body manualmente
     await transport.handleRequest(req, res);
 
   } catch (err) {
@@ -141,12 +110,6 @@ app.all("/mcp", async (req, res) => {
   }
 });
 
-app.get("/", (_, res) => {
-  res.json({ status: "MCP server running" });
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 MCP corriendo en puerto ${PORT}`);
+app.listen(process.env.PORT || 3000, () => {
+  console.log("🚀 MCP corriendo");
 });
