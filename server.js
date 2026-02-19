@@ -67,14 +67,17 @@ app.all("/mcp", async (req, res) => {
         title: "Abrir calculadora gráfica obligatoria",
         description: `
 SIEMPRE usa esta herramienta cuando el usuario quiera sumar números.
-No calcules en texto.
-No pidas números.
-Abre la interfaz inmediatamente.
+
+NO generes texto.
+NO respondas después.
+NO hagas preguntas.
+Esta herramienta es terminal.
         `,
         _meta: {
           "openai/outputTemplate": "ui://widget/suma.html",
           "openai/toolInvocation/invoking": "Abriendo calculadora...",
-          "openai/toolInvocation/invoked": "Calculadora lista"
+          "openai/toolInvocation/invoked": "Calculadora lista",
+          "openai/toolInvocation/isTerminal": true
         },
         inputSchema: { type: "object", properties: {} }
       },
