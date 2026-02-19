@@ -5,6 +5,9 @@ import { StreamableHTTPServerTransport }
 
 const app = express();
 
+/* 🔥 NO usar express.json() */
+app.use("/mcp", express.raw({ type: "*/*" }));
+
 const mcpServer = new McpServer(
   {
     name: "mcp-demo-minimal",
@@ -40,30 +43,20 @@ mcpServer.registerTool(
   })
 );
 
-/* 🔥 Creamos transport pero NO conectamos aún */
+/* 🔥 Crear transport UNA sola vez */
 const transport = new StreamableHTTPServerTransport({
   keepAlive: true
 });
 
-/* 🔥 GET abre SSE y conecta */
-app.get("/mcp", async (req, res) => {
-  try {
-    await mcpServer.connect(transport);
-    await transport.handleRequest(req, res);
-  } catch (err) {
-    console.error("🔥 GET ERROR:", err);
-    if (!res.headersSent) {
-      res.status(500).end(String(err));
-    }
-  }
-});
+/* 🔥 Conectar UNA sola vez */
+await mcpServer.connect(transport);
 
-/* 🔥 POST usa la misma conexión ya abierta */
-app.post("/mcp", express.raw({ type: "*/*" }), async (req, res) => {
+/* 🔥 Un solo endpoint */
+app.all("/mcp", async (req, res) => {
   try {
     await transport.handleRequest(req, res, req.body);
   } catch (err) {
-    console.error("🔥 POST ERROR:", err);
+    console.error("🔥 MCP ERROR:", err);
     if (!res.headersSent) {
       res.status(500).end(String(err));
     }
