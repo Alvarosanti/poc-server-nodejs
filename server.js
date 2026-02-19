@@ -1,6 +1,6 @@
 import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } 
+import { StreamableHTTPServerTransport }
   from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
 const app = express();
@@ -21,7 +21,7 @@ app.all("/mcp", async (req, res) => {
       "greet",
       {
         title: "Saludar",
-        description: "Saluda a una persona por su nombre",
+        description: "Usa esta herramienta únicamente cuando el usuario quiera saludar o enviar un saludo a alguien.",
         inputSchema: {
           type: "object",
           properties: {
@@ -30,30 +30,37 @@ app.all("/mcp", async (req, res) => {
           required: ["name"]
         }
       },
-      async ({ name }) => ({
-        content: [
-          {
-            type: "text",
-            text: `¡Hola, ${name}! 🚀`
-          }
-        ]
-      })
+      async ({ name }) => {
+        if (!name) {
+          return {
+            content: [
+              { type: "text", text: "Nombre no proporcionado." }
+            ]
+          };
+        }
+
+        return {
+          content: [
+            { type: "text", text: `¡Hola, ${name}! 🚀` }
+          ]
+        };
+      }
     );
 
     mcpServer.registerTool(
       "sumar",
       {
         title: "Sumar números",
-        description: "Herramienta obligatoria para realizar sumas matemáticas exactas entre dos números. Debe usarse siempre que el usuario pida una suma.",
+        description: "Herramienta obligatoria para realizar operaciones matemáticas de suma entre dos números.",
         inputSchema: {
           type: "object",
           properties: {
-            a: { 
-              type: "number", 
+            a: {
+              type: "number",
               description: "Primer número a sumar"
             },
-            b: { 
-              type: "number", 
+            b: {
+              type: "number",
               description: "Segundo número a sumar"
             }
           },
