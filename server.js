@@ -1,68 +1,64 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js"
-import { HttpClientTransport } from "@modelcontextprotocol/sdk/client/http.js"
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+import express from "express";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } 
+  from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-const server = new Server(
+const app = express();
+app.use(express.json());
 
+const mcpServer = new McpServer({
+  name: "mcp-demo-minimal",
+  version: "1.0.0",
+});
+
+mcpServer.registerTool(
+  "greet",
   {
-    name: "mcp-demo-minimal",
-    version: "1.0.0",
+    title: "Saludar",
+    description: "Saluda a una persona por su nombre",
+    inputSchema: {
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+        },
+      },
+      required: ["name"],
+    },
   },
-  {
-    capabilities: {
-      tools: {}
-    }
-  }
-)
-
-server.setRequestHandler(ListToolsRequestSchema, async (request) => {
-  return {
-    tools: [
-      {
-        name: "greet",
-        description: "Saludar a la persona por su nombre",
-        inputSchema: {
-          type: "object",
-          properties: {
-            name: {
-              type: "string",
-              description: "El nombre de la persona a saludar"
-            }
-          },
-          required: ["name"]
-        }
-      }
-    ]
-  }
-})
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, "argument": args } = request.params;
-  if (name === "greet") {
-    const { name: personName } = args
+  async ({ name }) => {
     return {
       content: [
         {
           type: "text",
-          text: `¡Hola, ${name}! bienvenidu a mcp demo`
-        }
-      ]
-    }
+          text: `¡Hola, ${name}! Bienvenido al MCP demo 🚀`,
+        },
+      ],
+    };
   }
-  throw new Error(`Tool ${toolName} no encontrada`)
-})
+);
 
-async function main() {
-  const transport = new HttpClientTransport()
-  await server.connect(transport)
-  console.log('demo started')
-}
-main().catch((error) => {
-  console.error("Error en el servidor:", error)
-  process.exit(1)
-})
+const transport = new StreamableHTTPServerTransport({
+  enableJsonResponse: true,
+});
+
+await mcpServer.connect(transport);
+
+app.all("/mcp", async (req, res) => {
+  try {
+    await transport.handleRequest(req, res, req.body);
+  } catch (err) {
+    console.error("MCP error:", err);
+    res.status(500).end(String(err));
+  }
+});
+
+app.get("/", (_, res) => {
+  res.json({ status: "MCP server running" });
+});
+
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`🚀 MCP corriendo en puerto ${PORT}`);
 });
