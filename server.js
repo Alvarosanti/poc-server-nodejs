@@ -1,10 +1,7 @@
 import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport } 
-  from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-
-const app = express();
-app.use(express.json());
+import { createExpressServer } 
+  from "@modelcontextprotocol/sdk/server/express.js";
 
 const mcpServer = new McpServer({
   name: "mcp-demo-minimal",
@@ -19,37 +16,25 @@ mcpServer.registerTool(
     inputSchema: {
       type: "object",
       properties: {
-        name: {
-          type: "string",
-        },
+        name: { type: "string" }
       },
-      required: ["name"],
-    },
+      required: ["name"]
+    }
   },
-  async ({ name }) => {
-    return {
-      content: [
-        {
-          type: "text",
-          text: `¡Hola, ${name}! Bienvenido al MCP demo 🚀`,
-        },
-      ],
-    };
-  }
+  async ({ name }) => ({
+    content: [
+      {
+        type: "text",
+        text: `¡Hola, ${name}! Bienvenido al MCP demo 🚀`
+      }
+    ]
+  })
 );
 
-const transport = new StreamableHTTPServerTransport();
+const app = express();
 
-await mcpServer.connect(transport);
-
-app.all("/mcp", async (req, res) => {
-  try {
-    await transport.handleRequest(req, res, req.body);
-  } catch (err) {
-    console.error("MCP error:", err);
-    res.status(500).end(String(err));
-  }
-});
+// 👇 Esto crea correctamente el endpoint /mcp
+createExpressServer(app, mcpServer);
 
 app.get("/", (_, res) => {
   res.json({ status: "MCP server running" });
