@@ -1,9 +1,13 @@
 import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StreamableHTTPServerTransport }
-  from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import fs from "fs";
+import path from "path";
 
 const app = express();
+
+
+
 
 app.all("/mcp", async (req, res) => {
   try {
@@ -15,6 +19,32 @@ app.all("/mcp", async (req, res) => {
       {
         capabilities: { tools: {} }
       }
+
+    );
+
+    const widgetJs = fs.readFileSync(
+      path.resolve("./dist/component.js"),
+      "utf8"
+    );
+
+    mcpServer.registerResource(
+      "sum-widget",
+      "ui://widget/suma.html",
+      {
+        title: "Calculadora"
+      },
+      async () => ({
+        contents: [{
+          uri: "ui://widget/suma.html",
+          mimeType: "text/html+skybridge",
+          text: `
+            <div id="root"></div>
+            <script type="module">
+              ${widgetJs}
+            </script>
+          `
+        }]
+      })
     );
 
     mcpServer.registerTool(
@@ -64,10 +94,32 @@ app.all("/mcp", async (req, res) => {
       async ({ a, b }) => ({
         content: [
           { type: "text", text: `Resultado: ${a + b}` }
-        ]
+        ],
+        structuredContent: {
+          resultado: a + b
+        }
       })
     );
 
+    mcpServer.registerTool(
+      "abrir_suma",
+      {
+        title: "Abrir calculadora",
+        description: "Usa esta herramienta cuando el usuario quiera sumar números mediante una interfaz gráfica.",
+        _meta: {
+          "openai/outputTemplate": "ui://widget/suma.html"
+        },
+        inputSchema: {
+          type: "object",
+          properties: {}
+        }
+      },
+      async () => ({
+        content: [
+          { type: "text", text: "Te abro la calculadora." }
+        ]
+      })
+    );
     const transport = new StreamableHTTPServerTransport({
       keepAlive: true
     });
