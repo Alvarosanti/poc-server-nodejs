@@ -5,12 +5,16 @@ import { StreamableHTTPServerTransport }
 
 const app = express();
 
-/* POST necesita raw body */
-app.use("/mcp", express.raw({ type: "*/*" }));
-
-app.all("/mcp", async (req, res) => {
+/* 🔥 Un solo endpoint /mcp */
+app.all("/mcp", express.raw({ type: "*/*" }), async (req, res) => {
   try {
-    // 🔥 Crear server NUEVO por conexión
+    // Convertir body si es POST
+    const body =
+      req.method === "POST" && req.body
+        ? req.body.toString("utf8")
+        : undefined;
+
+    // 🔥 Crear server nuevo por request
     const mcpServer = new McpServer(
       {
         name: "mcp-demo-minimal",
@@ -21,6 +25,7 @@ app.all("/mcp", async (req, res) => {
       }
     );
 
+    // Registrar tool
     mcpServer.registerTool(
       "greet",
       {
@@ -44,14 +49,14 @@ app.all("/mcp", async (req, res) => {
       })
     );
 
-    // 🔥 Crear transport NUEVO por request
+    // 🔥 Crear transport nuevo por request
     const transport = new StreamableHTTPServerTransport({
       keepAlive: true
     });
 
     await mcpServer.connect(transport);
 
-    await transport.handleRequest(req, res, req.body);
+    await transport.handleRequest(req, res, body);
 
   } catch (err) {
     console.error("🔥 MCP ERROR:", err);
