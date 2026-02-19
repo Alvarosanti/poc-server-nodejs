@@ -5,8 +5,6 @@ import { StreamableHTTPServerTransport }
 
 const app = express();
 
-app.use(express.json());
-
 const mcpServer = new McpServer({
   name: "mcp-demo-minimal",
   version: "1.0.0",
@@ -39,15 +37,8 @@ const transport = new StreamableHTTPServerTransport();
 
 await mcpServer.connect(transport);
 
-app.use("/mcp", async (req, res) => {
-  try {
-    await transport.handleRequest(req, res, req.body);
-  } catch (err) {
-    console.error("MCP error:", err);
-    if (!res.headersSent) {
-      res.status(500).end(String(err));
-    }
-  }
+app.use("/mcp", (req, res) => {
+  transport.handleRequest(req, res);
 });
 
 app.get("/", (_, res) => {
