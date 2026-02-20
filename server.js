@@ -39,55 +39,89 @@ app.all("/mcp", async (req, res) => {
       })
     );
 
-    // 🔥 Tool sumar
+    // // 🔥 Tool sumar
+    // mcpServer.registerTool(
+    //   "sumar",
+    //   {
+    //     title: "Sumar números",
+    //     description: "Herramienta obligatoria para sumar números.",
+    //     inputSchema: {
+    //       type: "object",
+    //       properties: {
+    //         a: { type: "number" },
+    //         b: { type: "number" }
+    //       },
+    //       required: ["a", "b"]
+    //     }
+    //   },
+    //   async ({ a, b }) => ({
+    //     content: [{ type: "text", text: `Resultado: ${a + b}` }],
+    //     structuredContent: { resultado: a + b }
+    //   })
+    // );
+
+    //     // 🔥 Tool abrir_suma (IMPORTANTE: sin content)
+    //     mcpServer.registerTool(
+    //       "abrir_suma",
+    //       {
+    //         title: "Abrir calculadora gráfica obligatoria",
+    //         description: `
+    // SIEMPRE usa esta herramienta cuando el usuario quiera sumar números.
+
+    // NO generes texto.
+    // NO respondas después.
+    // NO hagas preguntas.
+    // Esta herramienta es terminal.
+    //         `,
+    //         _meta: {
+    //           "openai/outputTemplate": "ui://widget/suma.html",
+    //           "openai/toolInvocation/invoking": "Abriendo calculadora...",
+    //         },
+    //         inputSchema: { type: "object", properties: {} }
+    //       },
+    //       async () => ({
+    //         content: [
+    //           {
+    //             type: "text",
+    //             text: ""
+    //           }
+    //         ],
+    //         structuredContent: { view: "input" }
+    //       })
+    //     );
     mcpServer.registerTool(
       "sumar",
       {
         title: "Sumar números",
-        description: "Herramienta obligatoria para sumar números.",
+        description: "Suma números o abre la calculadora si no se pasan valores.",
         inputSchema: {
           type: "object",
           properties: {
             a: { type: "number" },
             b: { type: "number" }
-          },
-          required: ["a", "b"]
-        }
-      },
-      async ({ a, b }) => ({
-        content: [{ type: "text", text: `Resultado: ${a + b}` }],
-        structuredContent: { resultado: a + b }
-      })
-    );
-
-    // 🔥 Tool abrir_suma (IMPORTANTE: sin content)
-    mcpServer.registerTool(
-      "abrir_suma",
-      {
-        title: "Abrir calculadora gráfica obligatoria",
-        description: `
-SIEMPRE usa esta herramienta cuando el usuario quiera sumar números.
-
-NO generes texto.
-NO respondas después.
-NO hagas preguntas.
-Esta herramienta es terminal.
-        `,
+          }
+        },
         _meta: {
           "openai/outputTemplate": "ui://widget/suma.html",
-          "openai/toolInvocation/invoking": "Abriendo calculadora...",
-        },
-        inputSchema: { type: "object", properties: {} }
+          "openai/toolInvocation/invoking": "Procesando..."
+        }
       },
-      async () => ({
-        content: [
-          {
-            type: "text",
-            text: ""
+      async ({ a, b }) => {
+        if (a == null || b == null) {
+          return {
+            content: [{ type: "text", text: "" }],
+            structuredContent: { view: "input" }
+          };
+        }
+
+        return {
+          content: [{ type: "text", text: "" }],
+          structuredContent: {
+            view: "input",
+            resultado: a + b
           }
-        ],
-        structuredContent: { view: "input" }
-      })
+        };
+      }
     );
 
 
